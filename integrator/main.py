@@ -1,4 +1,5 @@
 import argparse
+import subprocess
 import sys
 import os
 from pathlib import Path
@@ -6,11 +7,12 @@ from openai import OpenAI
 
 client = OpenAI(api_key='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')
 
-def get_nodejs_project_structure(start_path=".", skip_dirs=None):
+def get_python_project_structure(start_path=".", skip_dirs=None):
+    no_add_dirs = ['node_modules', 'public', 'dev_env']
     if skip_dirs is None:
-        skip_dirs = set(['node_modules', 'public'])
+        skip_dirs = set(no_add_dirs)
     else:
-        skip_dirs = set(skip_dirs).union({'node_modules', 'public'})
+        skip_dirs = set(skip_dirs)
 
     structure = []
     start_path = Path(start_path).resolve()
@@ -49,27 +51,32 @@ def analyze_with_openai(prompt):
         return response.choices[0].message.content
     except Exception as e:
         return f"Error calling OpenAI API: {str(e)}"
+    
+def install_package(package_name):
+    try:
+        subprocess.check_call(['pip', 'install', package_name])
+        print(f"Successfully installed {package_name}.")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to install {package_name}. Error: {e}")
 
 def main():
     parser = argparse.ArgumentParser(description="Description of your CLI tool")
-    parser.add_argument('library', help="Library to integrate")
+    parser.add_argument('install', help="Library to install and integrate")
     parser.add_argument('-p', '--prompt', help="What feature of the library do you want to integrate")
     parser.add_argument('-f', '--files', help="Files where you want these changes to be integrated at")
 
     args = parser.parse_args()
-    print(f'{args.library} {args.prompt} {args.files}')
+    print(f'{args.install} {args.prompt} {args.files}')
+    install_package(args.install)
     current_path = os.getcwd()
     print(f"Project structure for: {current_path}")
-    structure = get_nodejs_project_structure(start_path=current_path, skip_dirs=['.venv', 'node_modules, public, dist'])
+    structure = get_python_project_structure(start_path=current_path, skip_dirs=['.venv', 'node_modules, public, dist, dev_env'])
     print(structure)
-
-    print()
-    print()
-    content = get_file_contents('package.json')
-    print(f"Contents of {'package.json'}:")
+    content = get_file_contents('requirements.txt')
+    print(f"Contents of {'requirements.txt'}:")
     print(content)
     # pass package json, pass content of file, structured prompt
-    prompt = f'I have a project with npm, i want to integrate {args.library} into it. {args.prompt}. This is my project structure and package.json : \n {structure} \n package.json : {content}'
+    prompt = f'I have a python project with and I want to integrate {args.install} into it. {args.prompt}. This is my project structure and requirements.txt : \n {structure} \n dependecies : {content}'
     analysis = analyze_with_openai(prompt)
     print(analysis)
     # update local files
