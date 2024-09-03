@@ -37,13 +37,13 @@ def get_file_contents(file_name):
     except Exception as e:
         return f"Error reading file '{file_name}': {str(e)}"
 
-def analyze_with_openai(content, prompt):
+def analyze_with_openai(prompt):
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that analyzes code and provides insights."},
-                {"role": "user", content: f"{prompt}\n\nHere's the content:\n\n{content}"}
+                {"role": "user", "content": f"{prompt}"}
             ]
         )
         return response.choices[0].message.content
@@ -69,7 +69,8 @@ def main():
     print(f"Contents of {'package.json'}:")
     print(content)
     # pass package json, pass content of file, structured prompt
-    analysis = analyze_with_openai(content, args.prompt)
+    prompt = f'I have a project with npm, i want to integrate {args.library} into it. {args.prompt}. This is my project structure and package.json : \n {structure} \n package.json : {content}'
+    analysis = analyze_with_openai(prompt)
     print(analysis)
     # update local files
 
