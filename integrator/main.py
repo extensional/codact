@@ -59,6 +59,25 @@ def install_package(package_name):
     except subprocess.CalledProcessError as e:
         print(f"Failed to install {package_name}. Error: {e}")
 
+
+def replace_file_content(filename, new_content):
+    ignore_dirs = ['.venv']
+    for root, dirs, files in os.walk('.'):
+        dirs[:] = [d for d in dirs if d not in ignore_dirs]
+        if filename in files:
+            file_path = os.path.join(root, filename)
+            try:
+                with open(file_path, 'w') as file:
+                    file.write(new_content)
+                print(f"File '{filename}' found and content replaced successfully.")
+                return True
+            except IOError as e:
+                print(f"Error writing to file '{filename}': {e}")
+                return False
+
+    print(f"File '{filename}' not found in the current directory or its subdirectories.")
+    return False
+
 def main():
     parser = argparse.ArgumentParser(description="Description of your CLI tool")
     parser.add_argument('install', help="Library to install and integrate")
@@ -76,9 +95,10 @@ def main():
     print(f"Contents of {'requirements.txt'}:")
     print(content)
     # pass package json, pass content of file, structured prompt
-    prompt = f'I have a python project with and I want to integrate {args.install} into it. {args.prompt}. This is my project structure and requirements.txt : \n {structure} \n dependecies : {content}'
+    prompt = f'I have a python project with and I want to integrate {args.install} into it. {args.prompt}. This is my project structure : \n {structure} \n and requirements.txt : {content}'
     analysis = analyze_with_openai(prompt)
     print(analysis)
+    replace_file_content("", "");
     # update local files
 
 
