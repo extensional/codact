@@ -4,6 +4,10 @@ import sys
 import os
 from pathlib import Path
 from openai import OpenAI
+import requests
+from bs4 import BeautifulSoup
+import logging
+# from zenrows import ZenRowsClient
 
 client = OpenAI(api_key='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')
 
@@ -78,18 +82,44 @@ def replace_file_content(filename, new_content):
     print(f"File '{filename}' not found in the current directory or its subdirectories.")
     return False
 
+def get_docs(page_url):
+    try:
+        my_res = requests.get(page_url)
+        soup = BeautifulSoup(my_res.content, "html.parser")
+        text = soup.get_text()
+
+        all_text = " ".join(text.split())
+
+        all_links = []
+
+        links = soup.find_all("a")
+
+        for link in links:
+            url = link.get("href")
+            all_links.append(url)
+
+        # return {"text": all_text, "links": all_links}
+        return all_text
+    except Exception as e:
+        logging.error(e)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Description of your CLI tool")
     subparsers = parser.add_subparsers(dest='command', help="command to run")
 
     install_parser = subparsers.add_parser('install', help="Install Python packages using pip.")
-    install_parser.add_argument('library_name', help="Library to install and integrate")
-    parser.add_argument('-p', '--prompt', help="What feature of the library do you want to integrate")
-    parser.add_argument('-f', '--files', help="Files where you want these changes to be integrated at")
+    install_parser.add_argument('package_name', help="Library to install and integrate")
+    install_parser.add_argument('-p', '--prompt', help="What feature of the library do you want to integrate")
+    install_parser.add_argument('-f', '--files', help="Files where you want these changes to be integrated into")
 
     args = parser.parse_args()
-    print(f'{args.install} {args.prompt} {args.files}')
-    install_package(args.install)
+    print(f'{args.package_name} {args.prompt} {args.files}')
+
+    pypi_url = "https://pypi.org/project/" + args.package_name
+    package_docs = get_docs(pypi_url)
+    install_package(args.package_name)
+
     current_path = os.getcwd()
     print(f"Project structure for: {current_path}")
     structure = get_python_project_structure(start_path=current_path, skip_dirs=['.venv', 'node_modules, public, dist, dev_env'])
@@ -101,7 +131,7 @@ def main():
     prompt = f'I have a python project with and I want to integrate {args.install} into it. {args.prompt}. This is my project structure : \n {structure} \n and requirements.txt : {content}'
     analysis = analyze_with_openai(prompt)
     print(analysis)
-    replace_file_content("", "");
+    replace_file_content("", "")
     # update local files
 
 
