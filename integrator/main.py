@@ -154,8 +154,17 @@ def main():
         content = get_file_contents(args.file)
         prompt = f'I have a python project and I want to integrate {args.package_name} into it. Respond with code only. This is the documentation for {args.package_name} : {package_docs}. {args.prompt}. This is my current code: {content}'
         analysis = analyze_with_openai(prompt)
+        print("Here's the suggested code to integrate the package:")
         print(analysis)
-        # replace_file_content(args.file, "HELLO THERE!")
+        
+        user_input = input("Would you like to accept these changes? (yes/no): ").lower().strip()
+        
+        if user_input == 'yes':
+            replace_file_content(args.file, analysis)
+            print(f"Changes have been applied to {args.file}")
+        else:
+            print("Changes were not applied.")
+        print(analysis)
 
     elif args.command == 'debug':
         run_code(args.run)
