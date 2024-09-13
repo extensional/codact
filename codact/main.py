@@ -13,7 +13,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
-client = OpenAI(api_key='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')
+client = OpenAI(api_key='ADD API KEY HERE')
 
 def get_python_project_structure(start_path=".", skip_dirs=None):
     no_add_dirs = ['node_modules', 'public', 'dev_env']
