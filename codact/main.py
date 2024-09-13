@@ -141,9 +141,6 @@ def main():
 
     args = parser.parse_args()
     if args.command == 'install':
-
-        print(f'DEBUG: {args.package} {args.prompt} {args.file}')
-
         pypi_url = "https://pypi.org/project/" + args.package_name
         package_docs = get_docs(pypi_url)
         install_package(args.package_name)
@@ -152,10 +149,12 @@ def main():
         # structure = get_python_project_structure(start_path=current_path, skip_dirs=['.venv', 'node_modules, public, dist, dev_env'])
         # print(structure)
         content = get_file_contents(args.file)
-        prompt = f'I have a python project and I want to integrate {args.package_name} into it. Respond with code only. This is the documentation for {args.package_name} : {package_docs}. {args.prompt}. This is my current code: {content}'
+        prompt = f'I have a python project and I want to integrate {args.package_name} into it. Respond with code only, no additional text or explanations. This is the documentation for {args.package_name} : {package_docs}. {args.prompt}. This is my current code: {content}'
         analysis = analyze_with_openai(prompt)
         print("Here's the suggested code to integrate the package:")
         print(analysis)
+        if analysis.startswith('```') and analysis.endswith('```'):
+            analysis = analysis[9:-3].strip()
         
         user_input = input("Would you like to accept these changes? (yes/no): ").lower().strip()
         
@@ -164,7 +163,6 @@ def main():
             print(f"Changes have been applied to {args.file}")
         else:
             print("Changes were not applied.")
-        print(analysis)
 
     elif args.command == 'debug':
         run_code(args.run)
